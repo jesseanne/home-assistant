@@ -1,29 +1,26 @@
-FROM python:3.4
-MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
+## BUILDING
+##   (from project root directory)
+##   $ docker build -t mariadb-for-jesseanne-home-assistant .
+##
+## RUNNING
+##   $ docker run -p 3306:3306 mariadb-for-jesseanne-home-assistant
+##
+## CONNECTING
+##   Lookup the IP of your active docker host using:
+##     $ docker-machine ip $(docker-machine active)
+##   Connect to the container at DOCKER_IP:3306
+##     replacing DOCKER_IP for the IP of your active docker host
+##
+## NOTES
+##   This is a prebuilt version of MariaDB.
+##   For more information and documentation visit:
+##     https://github.com/bitnami/bitnami-docker-mariadb
 
-VOLUME /config
+FROM gcr.io/bitnami-containers/mariadb:10.1.14-r1
 
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
+ENV STACKSMITH_STACK_ID="p9owflj" \
+    STACKSMITH_STACK_NAME="MariaDB for jesseanne/home-assistant" \
+    STACKSMITH_STACK_PRIVATE="1" \
+    BITNAMI_CONTAINER_ORIGIN="stacksmith"
 
-RUN pip3 install --no-cache-dir colorlog cython
-
-# For the nmap tracker, bluetooth tracker, Z-Wave
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends nmap net-tools cython3 libudev-dev sudo libglib2.0-dev && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-COPY script/build_python_openzwave script/build_python_openzwave
-RUN script/build_python_openzwave && \
-  mkdir -p /usr/local/share/python-openzwave && \
-  ln -sf /usr/src/app/build/python-openzwave/openzwave/config /usr/local/share/python-openzwave/config
-
-COPY requirements_all.txt requirements_all.txt
-# certifi breaks Debian based installs
-RUN pip3 install --no-cache-dir -r requirements_all.txt && pip3 uninstall -y certifi && \
-    pip3 install mysqlclient psycopg2
-
-# Copy source
-COPY . .
-
-CMD [ "python", "-m", "homeassistant", "--config", "/config" ]
+## STACKSMITH-END: Modifications below this line will be unchanged when regenerating
